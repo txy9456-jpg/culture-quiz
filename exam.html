@@ -272,6 +272,14 @@ home = function(){
   return h;
 };
 render();
+// auto-update: reload when a newer version is published (GitHub Pages caches pages ~10 min)
+(function(){
+  const VERSION='20261015171121';
+  fetch(location.pathname+'?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>{
+    const m=t.match(/const VERSION='(\d+)'/);
+    if(m && m[1]>VERSION) location.replace(location.pathname+'?v='+m[1]);
+  }).catch(()=>{});
+})();
 </script>
 
 </body></html>
