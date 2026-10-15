@@ -139,7 +139,8 @@ function load(){ try{ S = JSON.parse(localStorage.getItem(KEY)) }catch(e){}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
 load();
 let view = S.cur ? (S.cur.done ? 'result' : 'quiz') : 'home';
-let instant = true; try{ instant = localStorage.getItem(KEY+'-mode') !== 'exam' }catch(e){}
+let mode='inst'; try{ mode = localStorage.getItem(KEY+'-mode') || 'inst' }catch(e){}
+let instant = mode!=='exam', studyQ='';
 let showGrid = false, confirmSubmit = false, reviewAll = false;
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a }
@@ -191,11 +192,12 @@ function home(){
     <div class="panel stack">
       <h2>答题方式</h2>
       <div class="seg" role="group">
-        <button id="m-inst" aria-pressed="${instant}">练习模式：选完立刻看对错</button>
-        <button id="m-exam" aria-pressed="${!instant}">考试模式：交卷后看答案</button>
+        <button id="m-inst" aria-pressed="${mode==='inst'}">练习模式：选完立刻看对错</button>
+        <button id="m-exam" aria-pressed="${mode==='exam'}">考试模式：交卷后看答案</button>
+        <button id="m-study" aria-pressed="${mode==='study'}">背题模式：直接看全部答案</button>
       </div>
     </div>
-    <button class="primary" id="go">开始新一轮（${N} 题）</button>
+    ${mode==='study' ? `<button class="primary" id="study">查看全部 ${BANK.length} 题（附答案）</button>` : `<button class="primary" id="go">开始新一轮（${N} 题）</button>`}
     <button class="ghost" id="gow" ${wrongN?'':'disabled'}>错题专练（${Math.min(wrongN,N)} 题）</button>
   </div>
   ${last.length ? `<div class="panel stack" style="margin-top:16px"><h2>最近成绩</h2>
@@ -273,8 +275,25 @@ function result(){
 }
 
 const app=document.getElementById('app');
-function render(){ app.innerHTML = view==='quiz'?quiz():view==='result'?result():home(); }
-function setMode(v){ instant=v; try{ localStorage.setItem(KEY+'-mode', v?'inst':'exam') }catch(e){}; render(); }
+function studyList(){
+  const k=studyQ.trim(), hit=BANK.map((q,i)=>({q,i})).filter(x=>!k || x.q.q.includes(k) || x.q.o.some(o=>o.includes(k)));
+  if(!hit.length) return `<p class="sub">没有找到包含"${esc(k)}"的题目，换个关键词试试。</p>`;
+  return hit.map(({q,i})=>`<div class="panel">
+    <div class="headrow"><span>第 <b>${i+1}</b> 题</span><span class="tag" style="margin:0;background:var(--ok-soft);color:var(--ok)">答案 ${L(q.a)}</span></div>
+    <p class="qtext" style="margin:4px 0 12px">${esc(q.q)}</p>
+    <div class="opts">${q.o.map((t,j)=>`<div class="opt${j===q.a?' right':''}" style="border-radius:10px"><span class="k">${L(j)}</span><span class="t">${esc(t)}${j===q.a?' <b style="color:var(--ok);white-space:nowrap">✓ 正确答案</b>':''}</span></div>`).join('')}</div>
+  </div>`).join('');
+}
+function study(){
+  return `<div class="head">
+    <div class="headrow"><span>背题模式 · 共 <b>${BANK.length}</b> 题</span><button class="link" id="quit" style="min-height:32px;padding:0">返回首页</button></div>
+    <input id="study-q" type="search" aria-label="搜索题目" placeholder="搜索题目或选项关键词" value="${esc(studyQ)}" style="font:inherit;font-size:16px;color:var(--fg);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%">
+  </div>
+  <div class="stack" id="study-list" style="margin-top:8px">${studyList()}</div>`;
+}
+function render(){ app.innerHTML = view==='quiz'?quiz():view==='result'?result():view==='study'?study():home(); }
+app.addEventListener('input', e=>{ if(e.target.id==='study-q'){ studyQ=e.target.value; document.getElementById('study-list').innerHTML=studyList(); } });
+function setMode(m){ mode=m; instant=m!=='exam'; try{ localStorage.setItem(KEY+'-mode', m) }catch(e){}; render(); }
 
 app.addEventListener('click', e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -287,8 +306,10 @@ app.addEventListener('click', e=>{
   switch(b.id){
     case 'go': start('all'); break;
     case 'gow': start('wrong'); break;
-    case 'm-inst': setMode(true); break;
-    case 'm-exam': setMode(false); break;
+    case 'm-inst': setMode('inst'); break;
+    case 'm-study': setMode('study'); break;
+    case 'study': view='study'; render(); scrollTo(0,0); break;
+    case 'm-exam': setMode('exam'); break;
     case 'next': c.i++; confirmSubmit=false; save(); render(); scrollTo(0,0); break;
     case 'prev': c.i--; confirmSubmit=false; save(); render(); scrollTo(0,0); break;
     case 'card': showGrid=true; render(); break;
