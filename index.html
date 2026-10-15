@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head><body>
+<title>企业文化刷题</title>
+<style>
+/* Layout: single narrow column, sticky progress header, fixed bottom action bar; one question per screen */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --fg:#1b2130; --muted:#667085; --line:#dfe3ea;
+  --accent:#2747b8; --accent-soft:#e7ecfb; --ok:#13804b; --ok-soft:#e3f4ea; --bad:#c2352b; --bad-soft:#fbe7e5;
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --num:ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151c; --surface:#1b1f29; --fg:#e8ebf2; --muted:#98a1b3; --line:#2c3240;
+  --accent:#8ea6ff; --accent-soft:#252f52; --ok:#4fc787; --ok-soft:#173326; --bad:#ff8378; --bad-soft:#3d1e1c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151c; --surface:#1b1f29; --fg:#e8ebf2; --muted:#98a1b3; --line:#2c3240;
+  --accent:#8ea6ff; --accent-soft:#252f52; --ok:#4fc787; --ok-soft:#173326; --bad:#ff8378; --bad-soft:#3d1e1c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.6;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:16px 120px}
+h1{font-size:24px;line-height:1.3;margin:8px 0 4px;text-wrap:balance}
+h2{font-size:18px;margin:0 0 8px}
+.sub{color:var(--muted);font-size:14px;margin:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--num);font-size:22px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:12px 16px;min-height:48px}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.primary{background:var(--accent);color:var(--surface);font-weight:600}
+.ghost{background:var(--surface);color:var(--fg);border:1px solid var(--line)}
+.link{background:none;color:var(--muted);min-height:40px;padding:8px;font-size:14px;text-decoration:underline}
+button:disabled{opacity:.45;cursor:default}
+.head{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;flex-direction:column;gap:8px}
+.headrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.headrow b{color:var(--fg);font-family:var(--num);font-variant-numeric:tabular-nums}
+.qtext{font-size:18px;font-weight:600;line-height:1.55;margin:4px 0 16px}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-bottom:6px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--surface);color:var(--fg);border:1.5px solid var(--line);padding:12px 14px}
+.opt .k{flex:none;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-weight:600;font-size:14px;margin-top:1px}
+.opt .t{min-width:0;flex:1}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.sel .k{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.right .k{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .k{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+.feedback{margin-top:12px;font-weight:600}
+.feedback.ok{color:var(--ok)} .feedback.no{color:var(--bad)}
+.foot{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.foot .in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:8px}
+.cell{min-height:44px;padding:0;border-radius:8px;background:var(--surface);border:1px solid var(--line);color:var(--fg);font-family:var(--num);font-size:14px}
+.cell.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.cell.cur{outline:2px solid var(--fg);outline-offset:1px}
+.cell.r{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.cell.w{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.score{font-family:var(--num);font-size:56px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.score small{font-size:20px;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>button{flex:1 1 140px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{min-height:38px;padding:6px 14px;font-size:14px;background:var(--surface);border:1px solid var(--line);color:var(--fg)}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.wq{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:6px}
+.wq:first-child{border-top:0;padding-top:0}
+.wq .qn{font-size:13px;color:var(--muted);font-family:var(--num)}
+.wq .qq{font-weight:600}
+.ans{font-size:15px;display:flex;gap:6px;align-items:baseline}
+.ans .lbl{flex:none;font-size:12px;padding:1px 6px;border-radius:4px}
+.ans.y .lbl{background:var(--bad-soft);color:var(--bad)}
+.ans.c .lbl{background:var(--ok-soft);color:var(--ok)}
+.ans.c{color:var(--ok);font-weight:600}
+.ans.y{color:var(--bad)}
+.hint{font-size:13px;color:var(--muted)}
+.confirm{border:1.5px solid var(--bad);background:var(--bad-soft)}
+.sheet{position:fixed;inset:0;z-index:10;background:rgba(10,14,25,.45);display:flex;align-items:flex-end}
+.sheet .box{background:var(--bg);width:100%;max-height:75%;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet .box>div{max-width:640px;margin:0 auto}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+const BANK = [{"q":"东呈的使命是什么？","o":["让大众出行者花更多的钱，住更好的酒店","让大众出行者花更少的钱，住更好一点","为股东创造最大利润","为员工提供最佳职业发展机会"],"a":1,"e":""},{"q":"东呈的愿景是什么？","o":["成为世界一流酒店集团","成为中国最大的酒店集团","成为亚洲最大的酒店集团","成为全球最具影响力的酒店集团"],"a":0,"e":""},{"q":"东呈的价值观是什么？","o":["以客为尊","合作分享","激情专注","目标必达","以上都是"],"a":4,"e":""},{"q":"东呈认为哪三个元素共同创造了其主要价值？","o":["人力资源、加盟商和财务资本","人力资源、加盟商和客户满意度","客户满意度、加盟商和财务资本","人力资源、加盟合作伙伴和财务资本"],"a":3,"e":""},{"q":"我们的经营政策涵盖：（ ）、科技、产品、品牌、营销、运营、开发","o":["会员","金融","直销","员工"],"a":0,"e":""},{"q":"我们坚信用什么人、奖什么人、罚什么人是东呈价值观的直接体现，正确的（）是实现东呈可持续发展的重要保障。","o":["价值观","人才观","政策方针","人才评价"],"a":1,"e":""},{"q":"在东呈基本法人才政策方面我们了解到：（）是员工努力方向的指挥棒，清晰明确、客观公正的价值评价标准是管理权威的基础，能引导全体员工向着正确的方向努力，确保剑指一方、力出一孔、利出一孔，支撑东呈战略目标的实现。","o":["价值评价等级","价值评价标准","价值评价清晰","价值人才观"],"a":1,"e":""},{"q":"东呈基本法在人才晋升的人才供给方面明确表示：基于长期发展战略，我们坚持运营和开发等业务类岗位以（）为主，为成熟业务的稳定运营提供保障。","o":["内部推荐","内部晋升","外部招聘","内部晋升及外部招聘相结合"],"a":1,"e":""},{"q":"东呈基本法在人才政策中表示：我们将（）视为战略要务，加强前置性资源投入，最大化发挥人力资源的效能，为关键领域和核心岗位的人才提供充分的成长空间和培育周期。","o":["人才招聘","人才留任","人才培养","人才挖掘"],"a":2,"e":""},{"q":"在人才晋升中干部选拔方面，我们的目标是组织内（）干部为内部培养，同时外部引进（），获取业界优秀人才并激发组织活力，防止组织懈怠。","o":["70%、30%","80%、20%","60%、40%","75%、25%"],"a":0,"e":""},{"q":"东呈基本法在本次东呈优秀人才的标准上进行了升华，除“激情、务实、担当”外，增加了（）。","o":["专注","分享","创新","开放"],"a":2,"e":""},{"q":"具备强烈的责任心，以主人翁心态处理问题，在工作中主动承担起自己的角色职务赋予的使命，对工作负责，对客户负责；面对挑战与阻力，不推诿，不回避，勇于面对压力，必要时能够承受“委屈”。以上解释说明最符合东呈人才标准的（）","o":["激情","务实","担当","创新"],"a":2,"e":""},{"q":"东呈的会员被视为什么？","o":["公司的次要资产","公司的潜在客户","公司的核心资产","公司的一般客户"],"a":2,"e":""},{"q":"东呈会作为什么存在？","o":["仅线上预订平台","东呈自有客源的维护和输出基地","独立的酒店品牌","外部合作伙伴网络"],"a":1,"e":""},{"q":"东呈的品牌建设的基础是什么？","o":["系统的营销活动","有效的品牌传播","系统的品牌规范与标准","强大的财务支持"],"a":2,"e":""},{"q":"东呈的品牌建设的前提是什么？","o":["系统的品牌规范与标准","稳定一致、规模化的高性价比产品和服务","有效的品牌传播","强大的财务支持"],"a":1,"e":""},{"q":"东呈的品牌传播认为谁是品牌的传播使者？","o":["每个东呈人","部分东呈人","高层管理人员","营销部门"],"a":0,"e":""},{"q":"东呈的品牌传播认为什么才能形成品牌传播的闭环？","o":["每个员工都能树立起品牌意识","每个员工都能深入理解东呈价值追求","每个员工都能清晰传递东呈价值主张","每个员工都能树立起品牌意识，在工作中严格、持续践行东呈品牌规范与标准"],"a":3,"e":""},{"q":"东呈如何定义品牌？","o":["客户行为上对东呈产品和服务的认知","客户心智中对东呈产品和服务的认知","东呈产品和服务的价格","东呈员工的工作态度"],"a":1,"e":""},{"q":"东呈的品牌传播认为什么才能实现品牌的生命力持续？","o":["每个员工都能深入理解东呈价值追求","每个员工都能清晰传递东呈价值主张","每个员工都能树立起品牌意识","从产品研发到门店运营的全价值链协同"],"a":3,"e":""},{"q":"东呈选择加盟合作伙伴的标准有哪些？","o":["不认同连锁商业模式","不愿意接受标准培训","没有良好的个人信誉","认同连锁商业模式，愿意接受标准培训"],"a":3,"e":""},{"q":"东呈在处理与加盟合作伙伴的关系时坚持的原则是什么？","o":["协商原则","共赢原则","底线原则","以上都是"],"a":3,"e":""},{"q":"东呈的组织体制是什么类型的？","o":["集权化组织","分权化组织","集权化的分权组织","完全分散型组织"],"a":2,"e":""},{"q":"东呈的组织设计原则之一不包括？","o":["客户导向原则","产品导向原则","精干高效原则","责权对等原则"],"a":1,"e":""},{"q":"东呈的高层决策原则之一是什么？","o":["集体决策原则","随机决策原则","充分讨论原则","个人决策原则"],"a":2,"e":""},{"q":"东呈认为人力资源的作用是什么？","o":["仅限于招聘和培训","仅限于薪酬管理和福利发放","通过科学配置资源，确保公司持续稳定发展","仅限于员工离职管理"],"a":2,"e":""},{"q":"东呈认为什么样的人才是优秀的？","o":["激情","务实","担当","创新","以上都是"],"a":4,"e":""},{"q":"东呈的服务宗旨是什么？","o":["为客户提供个性化服务","为客户提供豪华服务","为客户提供定制化服务","为客户提供稳定一致的服务"],"a":3,"e":""},{"q":"东呈的服务原则之一是什么？","o":["服务差异化","服务标准化","服务特殊化","服务个性化"],"a":1,"e":""},{"q":"东呈的市场开发策略是什么？","o":["“铁网深耕、单点突破”","“铁网深耕、多点复制”","“铁网深耕、联省复制”","“铁网深耕、跨省复制”"],"a":2,"e":""},{"q":"东呈的组织体制如何确保决策灵活性？","o":["在离客户最近的地方建立指挥所","在离供应商最近的地方建立指挥所","在离竞争对手最近的地方建立指挥所","在离投资者最近的地方建立指挥所"],"a":0,"e":""},{"q":"东呈如何确保权力正确使用？","o":["不用权、不敢用权、不能用好权","敢于用权、敢于用权、能用好权","敢于用权、不敢用权、能用好权","不用权、敢于用权、不能用好权"],"a":1,"e":""},{"q":"东呈选择加盟合作伙伴的标准包括哪一项？","o":["认同连锁商业模式","愿意接受标准培训","愿意接受、执行东呈的品牌、产品、服务标准","以上都是"],"a":3,"e":""},{"q":"东呈如何处理与外部设计合作方的关系？","o":["与合作方保持短期合作关系","与合作方保持不定期合作关系","与合作方保持长期稳定的合作关系","与合作方保持竞争关系"],"a":2,"e":""},{"q":"东呈与加盟合作伙伴的关系处理原则不包括哪一项？","o":["协商原则","共赢原则","底线原则","盈利原则"],"a":3,"e":""},{"q":"东呈的产品观是什么？","o":["“比好再多一点”、“性价比”产品观","“比好再多一点”、“高性价比”产品观","“比好再多一点”、“超高性价比”产品观"],"a":1,"e":""},{"q":"东呈的产品研发基本原则是什么？","o":["以领导意志为产品研发的基本原则","以技术领先为产品研发的基本原则","以满足客户需求和提升客户体验为基本原则","以行业经验为产品研发的基本原则"],"a":2,"e":""},{"q":"东呈的产品研发过程中，产品检验的标准是什么？","o":["客户满意度","技术先进性","成本效益","设计美感"],"a":0,"e":""},{"q":"东呈的产品研发过程中，“需求倾听”指的是什么？","o":["重视领导的意见与反馈","重视客户的意见与反馈","重视供应商的意见与反馈","重视竞争对手的意见与反馈"],"a":1,"e":""},{"q":"东呈的产品研发过程中，“产品检验”的标准是什么？","o":["客户满意度","技术先进性","成本效益","设计美感"],"a":0,"e":""},{"q":"东呈的产品研发协同机制中，谁是产品研发决策机构？","o":["产品研发部门","销售部门","运营部门","产品委员会"],"a":3,"e":""},{"q":"东呈营销策略中，哪一项是其重点？","o":["中央营销","门店营销","中央营销和门店营销","社交媒体营销"],"a":2,"e":""},{"q":"东呈营销策略中，如何提升会员活跃度？","o":["优化中央预订渠道，加强数据分析能力","提高OTA的依赖度","减少中央预订系统的建设","降低会员转化率"],"a":0,"e":""},{"q":"东呈运营服务原则中的“首问负责制”是什么意思？","o":["首个接受询问的员工为第一责任人","首个接受询问的员工可以将问题转给他人","首个接受询问的员工仅需记录问题","首个接受询问的员工仅需告知负责人"],"a":0,"e":""},{"q":"在集团“八项规定”中明确表示，严禁从事与（）存在关联交易的各类经营活动，牟取利益。","o":["店长","公司","领导","集团外部人员"],"a":1,"e":""},{"q":"在集团“八项规定”中明确表示，严禁同事之间发展（）的亲密关系。","o":["遵守法律和道德","符合公序良俗","违背道德","违背职业道德"],"a":2,"e":""},{"q":"在集团“八项规定”中明确表示， 严禁泄露（ ），倒卖公司资源，造成公司重大损失。","o":["公司信息","公司领导人行程","公司机密","培训试题"],"a":2,"e":""},{"q":"东呈董事长董事长程新华先生哪年开始涉足酒店产业","o":["2006","2007","2008","2009"],"a":0,"e":""},{"q":"董事长董事长程新华先生开的第一家酒店品牌为","o":["怡程","柏曼","城市便捷","宜尚"],"a":2,"e":""},{"q":"东呈集团于哪一年成立","o":["2013","2014","2015","2016"],"a":1,"e":""},{"q":"东呈集团成立发展跃入快车道，不到10年位列全国酒店业_____,全球____","o":["TOP10;TOP20","TOP15;TOP5","TOP10;TOP14","TOP5; TOP14"],"a":3,"e":""},{"q":"东呈集团拥有____个酒店品牌","o":["14","13","12","11"],"a":0,"e":""},{"q":"可以概括东呈集团18年发展的词为","o":["变化","进化","转化","量化"],"a":1,"e":""},{"q":"董事长董事长程新华先生提到与企业发展同频共振的个人认知成长的三个方面不包括","o":["对职业任何职业体系的认知","对科技的认知","对产品的认知","对发心的认知"],"a":2,"e":""},{"q":"______是卓有成效的激励机制，是激活企业持续发展的长久动力","o":["事业共创","科技驱动","组织多元","治理规范"],"a":0,"e":""},{"q":"城市便捷酒店的定位是","o":["传统经济型酒店","高端经济型酒店","中端酒店","高端酒店"],"a":1,"e":""},{"q":"《穿越周期的力量》书中董事长董事长程新华先生先生在“再多一点”的基础上提出了_____","o":["再少一点","更多一点","更好一点","更高一点"],"a":0,"e":""},{"q":"长期主义需要坚守的三个原则不包括","o":["提出目标，然后喊口号","始终心怀理想，保持热血和冲动","培养敏锐的嗅觉，灵活应变","做实事，精进每一天，在时间中持续地创造"],"a":0,"e":""},{"q":"第一章中董事长制定了下一个目标为","o":["五星体验，二星消费","万家好店，千亿市值","睡好一点，用心一点","豪华享受，平民价格"],"a":1,"e":""},{"q":"穿越周期的唯一道路是","o":["雄厚的资本","独特的资源","长期主义","系统化的能力"],"a":2,"e":""},{"q":"哪个品牌是将东方文化与现代酒店业完美结合的尝试","o":["城市便捷酒店","柏曼酒店","宜尚酒店","怡程酒店"],"a":3,"e":""},{"q":"当一些酒店还在纠结标准化流程时，东呈率先提出了“”的服务","o":["很香、很冷、很热情","豪华享受","五星体验","旅途中的家"],"a":0,"e":""},{"q":"第一家海外门店开设在___","o":["泰国","马来西亚","韩国","日本"],"a":1,"e":""},{"q":"董事长经常与员工分享“迷茫时想想本心，行动时做好取舍，变局时坚守信仰”，东呈的来处是___","o":["经济型酒店","深圳","大明山","东方文化"],"a":2,"e":""},{"q":"大明山精神指的是","o":["志存高远、理想浪漫的“奋斗精神”和舍我其谁、激情乐观的亮剑精神","爱国精神","长期主义","服务精神"],"a":0,"e":""},{"q":"东呈酒店事业的根基为","o":["高端人群","商务人群","大众市场","高端旅游人群"],"a":1,"e":""},{"q":"东呈的酒店事业主要围绕三个要点展开","o":["聚焦服务大众市场","坚持高性价比","推年轻化","以上都是"],"a":3,"e":""},{"q":"东呈历来就是“大众市场的守护者”，东呈的战略聚焦在两个“”","o":["234","123","345","456"],"a":0,"e":""},{"q":"从初心来讲，董事长很早就为东呈确定了使命，为___,____,____,___,___而创业兴业","o":["为客户满意","为员工幸福","为基业长青","为人生辉煌，为民族强盛","以上都是"],"a":4,"e":""},{"q":"面对大众市场，大众消费者对住宿的追求不再仅仅是有个地方住，而是更加注重____","o":["性价比与品质体验","提供平庸的产品和服务","放弃创新和升级","低端的场所"],"a":0,"e":""},{"q":"东呈产品理念大体可以用五个一点来概括，其中不包括","o":["房间大一点，服务好一点","地段好一点","服务少一点","早餐多一点","价格高一点"],"a":2,"e":""},{"q":"东呈集团那个酒店品牌可以算作针对中端市场进行产品设计比较成功的案例","o":["城市便捷酒店品牌","宜尚酒店品牌","柏曼酒店品牌","隐沫酒店品牌"],"a":1,"e":""},{"q":"“青猫”IP的推出代表了","o":["东呈的品牌行为","年轻化战略的落地措施","进一步拥抱互联网的信号","以上都是"],"a":3,"e":""},{"q":"2024年年底，东呈会开启了全新的品牌换新，包括","o":["品牌中文名从“东呈会”变成了“东呈青猫会”","APP图标从“呈”字变成了“青猫”形象","品牌英文名从“Dossen Club”变成了“Miao Club”","以上都是"],"a":3,"e":""},{"q":"董事长在书中提到“我们穿越周期的力量，也被称为发展的金线”的是","o":["服务","高性价比","大众市场","消费者"],"a":1,"e":""},{"q":"东呈集团以“高性价比之王”为追求，从哪几方面多方发力","o":["标准制定","产品打磨","投建提效","服务提升","以上都是"],"a":4,"e":""},{"q":"东呈基本法是首部以内部条例形式阐述___、___、____、____的手册","o":["企业价值观","使命","愿景","酒店理念","以上都是"],"a":4,"e":""},{"q":"董事长董事长程新华先生先生将“东呈基本法”称为“未来发展的定海神针”，其突出的作用是","o":["道","定","文化","人才"],"a":1,"e":""},{"q":"“东呈基本法”从哪些方面约束东呈所有人","o":["组织","人才","文化","经营策略","以上都是"],"a":4,"e":""},{"q":"董事长将东呈的企业文化定性为___的企业","o":["极度开放","极度授权","极度信任","以上都是"],"a":3,"e":""},{"q":"“东呈基本法”虽然不是一部厚重的法典著作，而只是一本薄薄的册子，但是其涵盖了","o":["事业理论","经营政策","组织政策","人才政策","以上都是"],"a":4,"e":""},{"q":"董事长在第三张永远在创业路上中提到“但行大路”，其中“大路”指的是","o":["大众市场和二、三、四线市场","高性价比","标准化管理","品牌年轻化","以上都是"],"a":4,"e":""},{"q":"东呈在与______的战略合作中，获得了资本的支持，也学习了在互联网营销、用户运营等方面的成功模式，并将这些经验融入自身服务体系，实现线上线下联动发展，是一种跟跑下的创新","o":["美团","携程","同程","智行"],"a":0,"e":""},{"q":"行动时做好取舍，需要","o":["聚焦核心竞争力","适时剥离非核心业务","及早优化产品线","做好市场细分","即时战略转型","以上都是"],"a":5,"e":""},{"q":"哪个酒店品牌期望成为中国存量改造市场最优秀、最受欢迎的中档酒店品牌","o":["城市便捷","宜尚、怡程","高端创新事业群","柏曼"],"a":3,"e":""},{"q":"董事长董事长程新华先生先生根据酒店业的实际，自创竞争力模型来分析市场环境和制定战略，这个模型是","o":["弓弩模型","波特五力分析模型","价值链分析模型","SCP分析模型"],"a":0,"e":""},{"q":"弓弩模型集_____、______、_____为一体","o":["聚焦","效率","文化","以上都是"],"a":3,"e":""},{"q":"东呈竞争力的核心组成部分是","o":["聚焦","文化","科技","效率"],"a":3,"e":""},{"q":"于东呈而言，效率的价值主要体现在","o":["平台化","数字化","装配化","以上都是"],"a":3,"e":""},{"q":"董事长董事长程新华先生认为____是推动企业发展的最关键的因素","o":["科技","文化","价值观","理念"],"a":0,"e":""},{"q":"董事长董事长程新华先生先生在第三章他的产品观中提到，在标准化的酒店产品研发过程中，他一直坚持三个原则，包括","o":["成本可控性","大规模可复制性","长期可运营性","以上都是"],"a":3,"e":""},{"q":"在保证产品质量的前提下，优化产品配置，从而相对降低成本指的是","o":["成本可控性","长期可运营性","大规模可复制性","精益求精的工匠精神"],"a":0,"e":""},{"q":"产品应该符合优先服务配置和酒店运营人员的能力需求，包括维修、更换、清洁等，是产品在3-5年不过时，指的是","o":["成本可控性","长期可运营性","大规模可复制性","精益求精的工匠精神"],"a":1,"e":""},{"q":"东呈集团的商业模式中，“客”指的是","o":["住客","加盟商","投资人","以上都是"],"a":3,"e":""},{"q":"工匠精神就是“一厘米宽一尺子深”，即","o":["在每一个细节上做到极致","不断改进和深化服务","为客户提供超出预期的服务体验","以上都是"],"a":3,"e":""},{"q":"东呈的核心经营战略是以___为中心","o":["会员拓展","会员经营","成本控制","国际化"],"a":1,"e":""},{"q":"东呈的核心价值观是___","o":["以人为本","脚踏实地","以客为尊","谨小慎微"],"a":2,"e":""},{"q":"东呈围绕会员经营发起的项目有哪个部门重点支持","o":["主责部门","协同部门","保障部门","以上都是"],"a":3,"e":""},{"q":"东呈在___年发布了集团级IP“青猫”","o":["2021","2022","2023","2024"],"a":2,"e":""},{"q":"如何将公域流量转为___流量对酒店集团的营销管理提出了更高要求","o":["定量","私域","会员","数字"],"a":1,"e":""},{"q":"东呈青猫会的快速发展为东呈的____提供了强有力支持","o":["数字化战略","品牌化战略","创新化战略","一体化战略"],"a":0,"e":""},{"q":"2024年春末夏初，东呈启动新一轮的组织变革的最大目的是","o":["优化集团管理","提升品牌竞争力","减少疫情的负面影响","强化一线力量"],"a":3,"e":""},{"q":"2022年，东呈将企业总部定位为“_____”，为一线服务的精干总部组织","o":["引领","赋能","监督","以上都是"],"a":3,"e":""},{"q":"决策传递或反馈收集的层级增多的弊端是","o":["加盟商利益受损","会员服务减弱","信息损耗严重","损害员工利益"],"a":2,"e":""},{"q":"董事长程新华先生指出：“一线有智慧，现场有'神灵'”，神灵指的是什么","o":["财神","商机","人才","客户"],"a":1,"e":""},{"q":"做好酒店服务业最直接有效的路径是____发现关键问题并找到解决办法","o":["管理层到一线去","管理层常开会议","门店员工自查","门店员工常开会议"],"a":0,"e":""},{"q":"东呈人应当具备什么品质","o":["勇于担当的勇气","持续创新的能力","团队协作的精神","以上都是"],"a":3,"e":""},{"q":"董事长程新华先生希望东呈员工可以像他23岁时一样，具有“____”的精神","o":["不等","不靠","不要","以上都是"],"a":3,"e":""},{"q":"____明确规定了东呈干部的标准","o":["劳动法","常识工作法","东呈基本法","合同法"],"a":2,"e":""},{"q":"以下哪条不是东呈干部的标准","o":["注重年轻实干的精神","在理论中锻炼成长","具备专业知识技能","拥有强烈的使命感和责任感"],"a":1,"e":""},{"q":"东呈人应当是“_____”的集合体","o":["年轻、激情、梦想","责任、能力、野心","团结、诚实、本分","忠诚、务实、谨慎"],"a":0,"e":""},{"q":"董事长程新华先生认为能把管理工作做好的两种人是","o":["学历高；经验丰富","谨小慎微；兢兢业业","年轻实干；敢于担当","细致服务；敢打敢闯"],"a":3,"e":""},{"q":"创业团队能成事，一定是____有责任、有担当也有勇气","o":["创始人","团队核心成员","技术人员","销售人员"],"a":1,"e":""},{"q":"客房阿姨注意客人对枕头硬度有不用的需求，因此集团就在客房中配备了不同硬度的枕头供客人选择。以上事例说明了创新是","o":["日常的","困难的","简单的","随机的"],"a":0,"e":""},{"q":"东呈利用技术优化了酒店的能源管理系统，通过___，可以根据客房的使用情况自动调节空调、照明等设备，大大降低了能耗。","o":["智慧酒店","智能调控","智慧客房","智慧维修"],"a":1,"e":""},{"q":"董事长程新华先生坚信，____才是企业长远发展的出路","o":["技术","创新","数字化","服务"],"a":1,"e":""},{"q":"东呈不光要在酒店业务上不断寻求突破，更要在餐饮配套、___等领域进行大胆尝试。","o":["酒店配套服务","酒店商业模式","泛酒店与社区服务","以上都是"],"a":3,"e":""},{"q":"地区总部升级的远期规划是把___推到市场一线","o":["客户体验、产品创新、品牌理念","创新服务、客户体验、产品体验","管理干部、综合服务、产品体验","管理干部、品牌理念、产品体验"],"a":2,"e":""},{"q":"所有的地区总部，无论大小，都是___的投射","o":["地区门店","部门","大总部","市场"],"a":2,"e":""},{"q":"东呈在发展的早期阶段总部设在","o":["南宁","桂林","广州","东莞"],"a":0,"e":""},{"q":"东呈从地区品牌向全国品牌，乃至国际品牌转变的标志是","o":["东呈青猫会的诞生","酒店数字化转型","东呈在新加坡设立办事处","总部迁至广州"],"a":3,"e":""},{"q":"东呈“总部前移”理念的具体体现是","o":["决策层深入一线","在华东地区进行深度布局","与市场和员工保持紧密联系","对广州总部进行升级"],"a":1,"e":""},{"q":"地区总部必须是一个____复合体","o":["多人才","高品质","多功能","高素质"],"a":2,"e":""},{"q":"____可以展现东呈的技术实力","o":["研发中心","展示中心","交流中心","交付中心"],"a":0,"e":""},{"q":"董事长程新华先生为企业的发展准备的锦囊里装了8个字：","o":["根本锚定，定力所在","内求心定，外求共生","乐观精神，长期主义","危中有机，机中有危"],"a":1,"e":""},{"q":"东呈之所以能够走到今天，正是因为集团在关键时刻保持___，抵制住了各种诱惑，坚守了自己的初心和使命","o":["谨慎投资","头脑清醒","不断创新","战略定力"],"a":3,"e":""},{"q":"对酒馆集团来说，保持战略定力，就是","o":["从粗放生长向精益管理过渡，通过私域运营把流量变留量","策略明确，铺排有序，分工明确，节点清晰，保障有力","咬死行业本质，做好品质和标准化，坚守底线，持续输出优质、低价服务","朝着“强一线、精中台、轻后台”的方向进化，减少层级，简化扁平"],"a":2,"e":""},{"q":"东呈将___视为企业发展的生命线","o":["利润","员工","会员","品质"],"a":3,"e":""},{"q":"东呈的品质是通过_______获得的","o":["不断优化产品与服务，不断提升客户体验","坚持自己的发展道路","实现发展的跃升","积累深厚的专业知识和技术优势"],"a":0,"e":""},{"q":"为确保每一家分店都能提供一致的高品质服务，东呈制定了严格的","o":["考核标准和管理制度","管理制度和服务标准","服务标准和考核标准","工作流程和考核制度"],"a":1,"e":""},{"q":"东呈的发展历程一直秉持着___的理念","o":["独立自主","产品至上","会员至上","开放共赢"],"a":3,"e":""},{"q":"不断与外界的交流融合中产生___、___、___乃至新物种，就是在定力之外寻求更多可能的一种努力","o":["新思路","新模式","新生意","以上都是"],"a":3,"e":""},{"q":"引入美团的投资后，东呈加速了自身向___服务企业的转变，促进了整个行业的转型升级","o":["科技型","开放性","传统型","智慧型"],"a":0,"e":""},{"q":"东呈聚焦于____，这一点不会动摇","o":["高端市场","中端市场","大众市场","新兴市场"],"a":2,"e":""},{"q":"东呈的酒店品牌创新工场中提供沉浸式中高档度假酒店的是","o":["宜尚Plus","殿影","蓓利夫人","隐沫"],"a":3,"e":""},{"q":"东呈的酒店品牌创新工场中属于法式轻奢城市精品酒店的是","o":["宜尚Plus","殿影","蓓利夫人","隐沫"],"a":2,"e":""},{"q":"“外求共生”的内涵是非常丰富的，所谓“外求”的“求”不是外向索取，关键在实现","o":["反求诸己","互利共生","利益最大化","呈意服务"],"a":1,"e":""},{"q":"___是东呈价值创造体系中至关重要的力量","o":["加盟合作伙伴","代言合作伙伴","政府合作伙伴","友商合作伙伴"],"a":0,"e":""},{"q":"到2024年，东呈全国加盟商数量","o":["小于5000","5000 - 8000","8000 - 10000","10000以上"],"a":3,"e":""},{"q":"如今，通过“东呈基本法”的形式确定了，东呈和加盟商的关系定位为","o":["利益合作","客户+合作伙伴关系","一般合伙人","价值创造三大核心元素之一"],"a":3,"e":""},{"q":"东呈认为加盟合作伙伴至关重要的前提条件是","o":["共同利益","友好互助","志同道合","求同存异"],"a":2,"e":""},{"q":"东呈未来的发展方向不包括以下哪一项","o":["平台化","数字化","生态化","传统化"],"a":3,"e":""},{"q":"构建一个____的生态系统对企业的成功非常重要","o":["可持续发展","平衡发展","多元发展","单向发展"],"a":0,"e":""},{"q":"东呈构建自己商业生态系统的信念从____开始","o":["创立之初","总部迁移时期","发展阶段","成熟阶段"],"a":0,"e":""},{"q":"未来，东呈的愿景是建设万家____服务客户的好店，达到千亿市值","o":["个性化","数字化","标准化","国际化"],"a":2,"e":""},{"q":"东呈通过哪种方式优化客户体验和提升运营效率","o":["增加酒店数量","大数据分析和人工智能","降低房价","扩大广告投放"],"a":1,"e":""},{"q":"东呈希望通过“两东大会”实现什么目标","o":["仅提高酒店入住率","让加盟合作“股东”和“房东”形成深度链接与合作","减少运营成本","统一酒店装修风格"],"a":1,"e":""},{"q":"东呈平台的核心功能是什么","o":["仅提供住宿服务","仅管理酒店员工","仅进行市场营销","链接各方力量，实现资源共享与共生发展"],"a":3,"e":""},{"q":"董事长程新华先生父亲对董事长程新华先生最大的影响是什么","o":["教会他种田技术","不甘于现状、勇于创新不断折腾的精神","严格要求他每天读书","鼓励他尽早打工赚钱"],"a":1,"e":""},{"q":"在董事长程新华先生关于他母亲的故事中，他认为真正的强大来自","o":["竞争和胜利","财富积累","仁爱、利他和真诚付出","技术创新"],"a":2,"e":""},{"q":"东呈的体系内，员工和加盟合作伙伴被称为","o":["福报和福田","人力资源","客户群体","利益相关者"],"a":0,"e":""},{"q":"董事长程新华先生认为故乡对企业家最重要的影响是什么","o":["提供创业启动资金","提供人脉资源","塑造企业家特质和提供力量源泉","提供政策优惠"],"a":2,"e":""},{"q":"董事长程新华先生认为最好的学习场景是","o":["外部课堂培训","在线课程","国际交流","自己的实战场景"],"a":3,"e":""},{"q":"董事长程新华先生建议领导者在遇到困难时应该","o":["多看看历史书","多参加社交应酬","外出旅游放松","聘请咨询公司"],"a":0,"e":""},{"q":"董事长程新华先生不喜欢____类型的知识","o":["实用技能","历史典故","华而不实的“屠龙木”","科学技术"],"a":2,"e":""},{"q":"创业初期，董事长程新华先生如何对待员工的学习","o":["禁止员工参加培训","把员工送到上海、广州等地参加培训","只允许内部培训","让员工自学"],"a":1,"e":""},{"q":"董事长程新华先生认为学习最重要的是","o":["获得证书","扩大知识面","提高考试成绩","学以致用"],"a":3,"e":""},{"q":"东呈被称为业内的","o":["黄埔军校","西点军校","抗日军校","国防军校"],"a":0,"e":""},{"q":"董事长程新华先生在老家休息时最喜欢","o":["应酬社交","外出旅游","专心阅读","看电视"],"a":2,"e":""},{"q":"东呈与万豪的合作始于","o":["2013年","2015年","2017年","2019年"],"a":1,"e":""},{"q":"东呈从万豪获得独家特许经营权的品牌是","o":["万怡酒店","万丽酒店","万枫酒店","威斯汀酒店"],"a":2,"e":""},{"q":"比尔·马里奥特考察工作时习惯用什么记录想法?","o":["录音笔","笔记本电脑","智能手机","记事贴和便条"],"a":3,"e":""},{"q":"东呈与万豪合作初期的主要分歧集中在","o":["产品标准和开发速度","品牌名称","员工薪酬","市场推广策略"],"a":0,"e":""},{"q":"东呈与万豪正式签署独家发展协议的地点是在","o":["北京","上海","广州","深圳"],"a":1,"e":""},{"q":"东呈曾向以下哪家企业学习智能制造经验？","o":["华为","海尔","格力","美的"],"a":1,"e":""},{"q":"东呈与哪家企业合作探讨利用语音智能提升酒店客服水平？","o":["百度","腾讯","阿里巴巴","科大讯飞"],"a":3,"e":""},{"q":"东呈向美团寻求合作主要是为了解决什么系统问题？","o":["财务系统","人事管理系统","预订系统","工程维护系统"],"a":2,"e":""},{"q":"东呈与万豪合作后，第一批万枫酒店没有在以下哪个城市落地？","o":["南宁","东莞","杭州","重庆"],"a":2,"e":""},{"q":"企业在成长过程中容易迷失方向的主要原因是什么？","o":["被各种新潮概念和复杂工具吸引，忽视常识","资金不足","市场竞争太激烈","员工素质不高"],"a":0,"e":""},{"q":"企业成长过程中常见的问题不包括？","o":["官僚主义","案牍主义","过度创新","表面文章"],"a":2,"e":""},{"q":"在数字化领域，东呈坚持的转型原则是什么？","o":["一味追求最新技术","以实际需求为导向","完全外包给技术公司","优先考虑技术炫酷程度"],"a":1,"e":""},{"q":"东呈在供应链管理中回归常识的做法不包括？","o":["优化库存管理","实时监控库存状况","与供应商合作降低采购成本","盲目大量囤积原材料"],"a":3,"e":""},{"q":"东呈在绩效考核中强调的最重要常识是什么？","o":["考核分数越高越好","分数必须反映实际工作结果","所有人都应该得满分","考核分数与培训次数挂钩"],"a":1,"e":""},{"q":"回归常识能给企业带来什么","o":["让企业变得更复杂","帮助企业在市场竞争中站稳脚跟","增加管理层次","使员工更依赖规章制度"],"a":1,"e":""},{"q":"东呈的绩效考核结果主要参照___标准","o":["集团盈亏线和利润线","员工工龄长短","部门人数多少","办公室面积大小"],"a":0,"e":""},{"q":"东呈在产品设计和服务理念上坚持___原则","o":["以成本为导向","以技术为核心","以人为本","以规模为目标"],"a":2,"e":""},{"q":"从商业角度，“刚刚好”理念强调","o":["无节制扩张","追求最大规模","形式胜过内容","克制的理性主义和实用性"],"a":3,"e":""},{"q":"董事长程新华先生认为未来的消费观念会趋向","o":["更加奢华","完全物质化","追求身份象征","更克制和适度"],"a":3,"e":""},{"q":"东呈未来希望向客户分享","o":["独特的生命哲学和商业哲学","仅产品和服务","更多的酒店数量","更低的价格"],"a":0,"e":""},{"q":"东呈集团认为企业的终极目标是","o":["成为全球最大酒店集团","实现最高利润率","成为“源于社会，回馈社会”的美好企业","拥有最多酒店数量"],"a":2,"e":""},{"q":"ESG体系不包括以下哪个方面","o":["环境","社会","治理","盈利"],"a":3,"e":""},{"q":"东呈在哪一天公布了可持续发展战略“零碳旅呈”","o":["2023年4月22日世界地球日","2023年6月5日世界环境日","2024年4月22日世界地球日","2024年6月5日世界环境日"],"a":0,"e":""},{"q":"东呈在哪一年成立了ESG办公室","o":["2020年","2022年","2023年","2024年"],"a":2,"e":""},{"q":"东呈通过什么方式确保可持续发展战略的实施","o":["聘请国际顾问","2024名可持续发展专员","全员减薪","减少酒店数量"],"a":1,"e":""},{"q":"东呈在供应链管理中优先选择什么样的供应商","o":["价格最低的供应商","规模最大的供应商","国际知名供应商","具备社会责任感与绿色环保意识的供应商"],"a":3,"e":""},{"q":"作者认为ESG的本质是","o":["提高企业利润","对环境好、对社会好、对人好","增加企业知名度","满足政府要求"],"a":1,"e":""},{"q":"董事长程新华先生认为与顶尖企业相比，什么样的企业经验对初创者更有参考价值","o":["做到“很好”而非“最好”的企业","行业巨头的发展史","国际企业的管理模式","互联网企业的创新案例"],"a":0,"e":""},{"q":"东呈集团最初是从哪个地区发展起来的","o":["长三角地区","珠三角地区","中西部地区","京津冀地区"],"a":2,"e":""},{"q":"董事长程新华先生认为创新最重要的前提是","o":["充足的资金","市场调研","政府支持","真心热爱"],"a":3,"e":""},{"q":"董事长程新华先生认为领导力最重要的三要素不包括","o":["远大理想和抱负","关爱员工","公平公正","严格考核"],"a":3,"e":""},{"q":"董事长程新华先生建议创业者到哪里寻找智慧和灵感","o":["国际考察","商学院课程","一线实践","网络论坛"],"a":2,"e":""},{"q":"到一线店面后，创业者应该重点研究哪三类人的需求","o":["客户、员工、投资人","供应商、政府、媒体","竞争对手、学者、专家","家人、朋友、同学"],"a":0,"e":""},{"q":"董事长程新华先生认为选择股东应该注重什么","o":["资金实力","价值观相近","社会关系","行业经验"],"a":1,"e":""},{"q":"董事长程新华先生认为处理与生态伙伴关系的关键词是","o":["竞争","交易","共生","利用"],"a":2,"e":""},{"q":"董事长程新华先生选人的两个标准是","o":["学历和经验","年龄和性别","外表和口才","进取心和价值观认同"],"a":3,"e":""},{"q":"董事长程新华先生建议创业者早期怎样处理股东问题","o":["多找股东分担风险","尽量独立承担风险","只找外资股东","只找亲戚做股东"],"a":1,"e":""},{"q":"弓弩模型中的聚焦是","o":["是准星、是方向，有助于迅速瞄准、精准触达","是抓手、是后劲，可以让企业走得更远","是弓弦，提供了强劲的拉动力","是核心组成部分"],"a":0,"e":""},{"q":"弓弩模型中的文化是","o":["是准星、是方向，有助于迅速瞄准、精准触达","是抓手、是后劲，可以让企业走得更远","是弓弦，提供了强劲的拉动力","是核心组成部分"],"a":1,"e":""},{"q":"弓弩模型中的效率是","o":["是准星、是方向，有助于迅速瞄准、精准触达","是抓手、是后劲，可以让企业走得更远","是弓弦，提供了强劲的拉动力","是核心组成部分"],"a":2,"e":""}];
+const N = 50, KEY = 'dc-quiz-v1';
+const L = i => String.fromCharCode(65 + i);
+let S; // persisted state
+function load(){ try{ S = JSON.parse(localStorage.getItem(KEY)) }catch(e){}
+  S = Object.assign({seen:{}, wrong:{}, rounds:[], cur:null}, S||{}); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
+load();
+let view = S.cur ? (S.cur.done ? 'result' : 'quiz') : 'home';
+let instant = true; try{ instant = localStorage.getItem(KEY+'-mode') !== 'exam' }catch(e){}
+let showGrid = false, confirmSubmit = false, reviewAll = false;
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a }
+function pick(kind){
+  let ids = BANK.map((_,i)=>i);
+  if(kind==='wrong') ids = Object.keys(S.wrong).map(Number);
+  // fewest-seen first, random within each tier -> new questions before repeats
+  const tiers = {};
+  ids.forEach(i => (tiers[S.seen[i]||0] ??= []).push(i));
+  let out = [];
+  Object.keys(tiers).map(Number).sort((a,b)=>a-b).forEach(k => out.push(...shuffle(tiers[k])));
+  return shuffle(out.slice(0, N));
+}
+function start(kind){
+  const ids = pick(kind);
+  if(!ids.length) return;
+  S.cur = {kind, ids, ans: Array(ids.length).fill(null), i:0, done:false, t:Date.now()};
+  save(); view='quiz'; confirmSubmit=false; render(); scrollTo(0,0);
+}
+function submit(){
+  const c = S.cur; let right=0;
+  c.ids.forEach((q,k)=>{
+    S.seen[q]=(S.seen[q]||0)+1;
+    if(c.ans[k]===BANK[q].a){ right++; if(S.wrong[q]) { S.wrong[q]--; if(S.wrong[q]<=0) delete S.wrong[q]; } }
+    else S.wrong[q]=2; // must answer right twice in later rounds to leave the wrong-book
+  });
+  c.done=true; c.right=right;
+  S.rounds.push({t:Date.now(), n:c.ids.length, right, kind:c.kind}); if(S.rounds.length>50) S.rounds.shift();
+  save(); view='result'; reviewAll=false; render(); scrollTo(0,0);
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) }
+
+function home(){
+  const seenN = Object.keys(S.seen).length, wrongN = Object.keys(S.wrong).length;
+  const last = S.rounds.slice(-5).reverse();
+  return `
+  <h1>企业文化刷题</h1>
+  <p class="sub">题库共 ${BANK.length} 道单选题 · 每轮 ${N} 题 · 优先出没做过的题</p>
+  <div class="panel stack" style="margin-top:16px">
+    <div class="stats">
+      <div class="stat"><b>${seenN}<small style="font-size:13px;color:var(--muted)">/${BANK.length}</small></b><span>已覆盖题目</span></div>
+      <div class="stat"><b>${S.rounds.length}</b><span>已完成轮数</span></div>
+      <div class="stat"><b style="color:${wrongN?'var(--bad)':'inherit'}">${wrongN}</b><span>错题本</span></div>
+    </div>
+    <div class="bar" aria-label="题库覆盖率"><i style="width:${seenN/BANK.length*100}%"></i></div>
+    <p class="hint" style="margin:0">${seenN<BANK.length ? `还有 ${BANK.length-seenN} 道题没做过，下一轮会先出这些。` : '全部题目都做过了，之后按做过次数从少到多出题。'}</p>
+  </div>
+  <div class="stack" style="margin-top:16px">
+    <div class="panel stack">
+      <h2>答题方式</h2>
+      <div class="seg" role="group">
+        <button id="m-inst" aria-pressed="${instant}">练习模式：选完立刻看对错</button>
+        <button id="m-exam" aria-pressed="${!instant}">考试模式：交卷后看答案</button>
+      </div>
+    </div>
+    <button class="primary" id="go">开始新一轮（${N} 题）</button>
+    <button class="ghost" id="gow" ${wrongN?'':'disabled'}>错题专练（${Math.min(wrongN,N)} 题）</button>
+  </div>
+  ${last.length ? `<div class="panel stack" style="margin-top:16px"><h2>最近成绩</h2>
+    ${last.map(r=>`<div class="headrow"><span>${new Date(r.t).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} · ${r.kind==='wrong'?'错题专练':'新一轮'}</span><b>${r.right}/${r.n}</b></div>`).join('')}
+  </div>` : ''}
+  <div style="margin-top:16px;text-align:center">
+    ${confirmSubmit==='reset' ? `<div class="panel confirm stack"><span>清空所有做题记录、错题本和成绩？</span><div class="row"><button class="ghost" id="rs-no">保留记录</button><button class="primary" id="rs-yes" style="background:var(--bad)">清空记录</button></div></div>`
+      : `<button class="link" id="rs">清空做题记录</button>`}
+  </div>`;
+}
+
+function quiz(){
+  const c=S.cur, q=BANK[c.ids[c.i]], a=c.ans[c.i], answered=c.ans.filter(x=>x!==null).length;
+  const reveal = instant && a!==null;
+  const opts = q.o.map((t,k)=>{
+    let cls='opt';
+    if(reveal){ if(k===q.a) cls+=' right'; else if(k===a) cls+=' wrong'; }
+    else if(k===a) cls+=' sel';
+    return `<button class="${cls}" data-o="${k}" ${reveal?'disabled style="opacity:1"':''}><span class="k">${L(k)}</span><span class="t">${esc(t)}</span></button>`;
+  }).join('');
+  const last = c.i===c.ids.length-1;
+  return `
+  <div class="head">
+    <div class="headrow"><span>${c.kind==='wrong'?'错题专练':'第 '+(S.rounds.length+1)+' 轮'} · 已答 <b>${answered}</b>/${c.ids.length}</span><button class="link" id="quit" style="min-height:32px;padding:0">返回首页</button></div>
+    <div class="bar"><i style="width:${answered/c.ids.length*100}%"></i></div>
+  </div>
+  <div class="panel" style="margin-top:8px">
+    ${S.wrong[c.ids[c.i]]?'<span class="tag">之前做错过</span>':''}
+    <div class="headrow"><span>第 <b>${c.i+1}</b> 题</span></div>
+    <p class="qtext">${esc(q.q)}</p>
+    <div class="opts">${opts}</div>
+    ${reveal ? (a===q.a ? `<p class="feedback ok">回答正确</p>` : `<p class="feedback no">回答错误，正确答案：${L(q.a)}</p>`) : ''}
+  </div>
+  ${confirmSubmit===true ? `<div class="panel confirm stack" style="margin-top:12px">
+    <span>${answered<c.ids.length ? `还有 ${c.ids.length-answered} 题没答，未答按错题计。` : '已全部答完。'}确认交卷？</span>
+    <div class="row"><button class="ghost" id="sb-no">继续答题</button><button class="primary" id="sb-yes">交卷</button></div></div>` : ''}
+  <div class="foot"><div class="in">
+    <button class="ghost" id="prev" ${c.i===0?'disabled':''}>上一题</button>
+    <button class="ghost" id="card">答题卡</button>
+    ${last ? `<button class="primary" id="sub">交卷</button>` : `<button class="primary" id="next">下一题</button>`}
+  </div></div>
+  ${showGrid ? `<div class="sheet" id="sheet"><div class="box"><div class="stack">
+    <div class="headrow"><h2 style="margin:0">答题卡</h2><button class="link" id="sheet-x">关闭</button></div>
+    <div class="grid">${c.ids.map((id,k)=>{
+      let cl='cell'; const x=c.ans[k];
+      if(x!==null) cl += instant ? (x===BANK[id].a?' r':' w') : ' done';
+      if(k===c.i) cl+=' cur';
+      return `<button class="${cl}" data-j="${k}">${k+1}</button>`}).join('')}</div>
+    <button class="primary" id="sub2">交卷</button>
+  </div></div></div>` : ''}`;
+}
+
+function result(){
+  const c=S.cur, right=c.ids.filter((id,k)=>c.ans[k]===BANK[id].a).length, n=c.ids.length;
+  const list = c.ids.map((id,k)=>({id,k,q:BANK[id],a:c.ans[k]})).filter(x=> reviewAll || x.a!==x.q.a);
+  const wrongN=n-right;
+  return `
+  <h1>本轮成绩</h1>
+  <div class="panel stack" style="margin-top:12px">
+    <div class="score">${right}<small> / ${n}</small></div>
+    <div class="headrow"><span>正确率 <b>${Math.round(right/n*100)}%</b></span><span>错 <b style="color:var(--bad)">${wrongN}</b> 题</span></div>
+    <div class="row"><button class="primary" id="go">再来一轮</button><button class="ghost" id="gow" ${Object.keys(S.wrong).length?'':'disabled'}>错题专练</button></div>
+    <button class="link" id="home">返回首页</button>
+  </div>
+  <div class="panel stack" style="margin-top:16px">
+    <div class="headrow"><h2 style="margin:0">${reviewAll?'全部题目':'错题与正确答案'}</h2>
+      <div class="seg"><button id="rv-w" aria-pressed="${!reviewAll}">只看错题</button><button id="rv-a" aria-pressed="${reviewAll}">全部</button></div></div>
+    ${list.length ? list.map(x=>`<div class="wq">
+      <span class="qn">第 ${x.k+1} 题</span>
+      <span class="qq">${esc(x.q.q)}</span>
+      ${x.a!==x.q.a ? `<div class="ans y"><span class="lbl">你的答案</span><span>${x.a===null?'未作答':L(x.a)+'. '+esc(x.q.o[x.a])}</span></div>`:''}
+      <div class="ans c"><span class="lbl">正确答案</span><span>${L(x.q.a)}. ${esc(x.q.o[x.q.a])}</span></div>
+    </div>`).join('') : '<p class="sub">这一轮全部答对。</p>'}
+  </div>`;
+}
+
+const app=document.getElementById('app');
+function render(){ app.innerHTML = view==='quiz'?quiz():view==='result'?result():home(); }
+function setMode(v){ instant=v; try{ localStorage.setItem(KEY+'-mode', v?'inst':'exam') }catch(e){}; render(); }
+
+app.addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const c=S.cur;
+  if(b.dataset.o!==undefined){ c.ans[c.i]=+b.dataset.o; save();
+    render();
+    if(!instant && c.i<c.ids.length-1) setTimeout(()=>{ c.i++; save(); render(); scrollTo(0,0) }, 220);
+    return; }
+  if(b.dataset.j!==undefined){ c.i=+b.dataset.j; showGrid=false; save(); render(); scrollTo(0,0); return; }
+  switch(b.id){
+    case 'go': start('all'); break;
+    case 'gow': start('wrong'); break;
+    case 'm-inst': setMode(true); break;
+    case 'm-exam': setMode(false); break;
+    case 'next': c.i++; confirmSubmit=false; save(); render(); scrollTo(0,0); break;
+    case 'prev': c.i--; confirmSubmit=false; save(); render(); scrollTo(0,0); break;
+    case 'card': showGrid=true; render(); break;
+    case 'sheet-x': showGrid=false; render(); break;
+    case 'sub': case 'sub2': showGrid=false; confirmSubmit=true; render(); scrollTo(0,document.body.scrollHeight); break;
+    case 'sb-no': confirmSubmit=false; render(); break;
+    case 'sb-yes': confirmSubmit=false; submit(); break;
+    case 'quit': view='home'; render(); break; // round kept; resumes from home via 继续
+    case 'home': S.cur=null; save(); view='home'; render(); scrollTo(0,0); break;
+    case 'resume': view='quiz'; render(); break;
+    case 'rv-w': reviewAll=false; render(); break;
+    case 'rv-a': reviewAll=true; render(); break;
+    case 'rs': confirmSubmit='reset'; render(); break;
+    case 'rs-no': confirmSubmit=false; render(); break;
+    case 'rs-yes': S={seen:{},wrong:{},rounds:[],cur:null}; save(); confirmSubmit=false; render(); break;
+  }
+});
+app.addEventListener('click', e=>{ if(e.target.id==='sheet'){ showGrid=false; render(); } });
+
+// resume banner on home when a round is unfinished
+const _home = home;
+home = function(){
+  const c=S.cur; let h=_home();
+  if(c && !c.done){ const n=c.ans.filter(x=>x!==null).length;
+    h = h.replace('<div class="stack" style="margin-top:16px">', `<div class="stack" style="margin-top:16px"><button class="primary" id="resume">继续上次未完成的一轮（已答 ${n}/${c.ids.length}）</button>`); }
+  return h;
+};
+render();
+</script>
+
+</body></html>
