@@ -111,6 +111,10 @@ button:disabled{opacity:.45;cursor:default}
   .login .poster::after{display:none}
   .login .fields{flex:1 1 45%;padding:0}
 }
+/* consolidate (favorite) button */
+.fav-row{display:flex;justify-content:flex-end;margin-top:12px}
+.fav-b{min-height:40px;padding:8px 14px;font-size:14px;background:var(--surface);color:var(--accent);border:1.5px solid var(--accent);border-radius:999px}
+.fav-b.on{background:var(--accent);color:var(--surface)}
 /* round history rows */
 .rec{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px;border-top:1px solid var(--line)}
 .rec:first-of-type{border-top:0}
@@ -144,7 +148,7 @@ const N = 50, KEY = 'dc-quiz-v1';
 const L = i => String.fromCharCode(65 + i);
 let S; // persisted state
 function load(){ try{ S = JSON.parse(localStorage.getItem(KEY)) }catch(e){}
-  S = Object.assign({seen:{}, wrong:{}, rounds:[], cur:null}, S||{}); }
+  S = Object.assign({seen:{}, wrong:{}, rounds:[], cur:null, fav:[]}, S||{}); }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
 load();
 let view = S.cur ? (S.cur.done ? 'result' : 'quiz') : 'home';
@@ -156,6 +160,7 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.rando
 function pick(kind){
   let ids = BANK.map((_,i)=>i);
   if(kind==='wrong') ids = Object.keys(S.wrong).map(Number);
+  if(kind==='fav') ids = S.fav.slice();
   // fewest-seen first, random within each tier -> new questions before repeats
   const tiers = {};
   ids.forEach(i => (tiers[S.seen[i]||0] ??= []).push(i));
@@ -193,7 +198,7 @@ function reviewList(ids, ans){
 }
 function roundView(){
   const r=S.rounds[roundIdx]; if(!r||!r.ids){ view='home'; return home(); }
-  return `<div class="headrow" style="margin-top:8px"><span>${fmtT(r.t)} · ${r.kind==='wrong'?'错题专练':'新一轮'}</span><button class="link" id="back-home" style="min-height:32px;padding:0">返回首页</button></div>
+  return `<div class="headrow" style="margin-top:8px"><span>${fmtT(r.t)} · ${r.kind==='fav'?'巩固练习':r.kind==='wrong'?'错题专练':'新一轮'}</span><button class="link" id="back-home" style="min-height:32px;padding:0">返回首页</button></div>
   <div class="panel stack" style="margin-top:8px">
     <div class="score">${r.right*2}<small> 分 / ${r.n*2}</small></div>
     <div class="headrow"><span>答对 <b>${r.right}</b> / ${r.n} 题 · 每题 2 分</span><span>错 <b style="color:var(--bad)">${r.n-r.right}</b> 题</span></div>
@@ -203,6 +208,19 @@ function roundView(){
       <div class="seg"><button id="rv-w" aria-pressed="${!reviewAll}">只看错题</button><button id="rv-a" aria-pressed="${reviewAll}">全部</button></div></div>
     ${reviewList(r.ids, r.ans)}
   </div>`;
+}
+function favView(){
+  const items=S.fav.slice().reverse();
+  return `<div class="head">
+    <div class="headrow"><span>巩固题库 · 共 <b>${S.fav.length}</b> 题</span><button class="link" id="back-home" style="min-height:32px;padding:0">返回首页</button></div>
+    ${S.fav.length?`<button class="primary" id="gofav">练习这些题（${Math.min(S.fav.length,N)} 题）</button>`:''}
+  </div>
+  <div class="stack" style="margin-top:8px">${items.length ? items.map(i=>{const q=BANK[i]; return `<div class="panel">
+    <div class="headrow"><span>题库第 <b>${i+1}</b> 题</span><span class="tag" style="margin:0;background:var(--ok-soft);color:var(--ok)">答案 ${L(q.a)}</span></div>
+    <p class="qtext" style="margin:4px 0 12px">${esc(q.q)}</p>
+    <div class="opts">${q.o.map((t,j)=>`<div class="opt${j===q.a?' right':''}" style="border-radius:10px"><span class="k">${L(j)}</span><span class="t">${esc(t)}${j===q.a?' <b style="color:var(--ok);white-space:nowrap">✓ 正确答案</b>':''}</span></div>`).join('')}</div>
+    <div class="fav-row"><button class="fav-b on" data-unfav="${i}">移出巩固题库</button></div>
+  </div>`}).join('') : '<p class="sub">还没有题目。做题时点选项下方的“加入巩固题库”，题目就会出现在这里。</p>'}</div>`;
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) }
 
@@ -232,10 +250,11 @@ function home(){
     </div>
     ${mode==='study' ? `<button class="primary" id="study">查看全部 ${BANK.length} 题（附答案）</button>` : `<button class="primary" id="go">开始新一轮（${N} 题）</button>`}
     <button class="ghost" id="gow" ${wrongN?'':'disabled'}>错题专练（${Math.min(wrongN,N)} 题）</button>
+    <button class="ghost" id="favs" ${S.fav.length?'':'disabled'}>巩固题库（${S.fav.length} 题）</button>
   </div>
   ${last.length ? `<div class="panel stack" style="margin-top:16px"><h2>最近成绩</h2>
     ${last.map(({r,i})=>{ const w=r.ids?r.n-r.right:null; return `<div class="rec">
-      <div class="rec-l"><span class="rec-t">${fmtT(r.t)} · ${r.kind==='wrong'?'错题专练':'新一轮'}</span>
+      <div class="rec-l"><span class="rec-t">${fmtT(r.t)} · ${r.kind==='fav'?'巩固练习':r.kind==='wrong'?'错题专练':'新一轮'}</span>
         <span class="rec-s"><b>${r.right*2}</b> 分<small> / ${r.n*2}</small> · 答对 ${r.right}/${r.n}</span></div>
       ${w===null ? `<span class="hint">旧记录无错题明细</span>` : w===0 ? `<span class="hint" style="color:var(--ok)">全部答对</span>` : `<button class="ghost rec-b" data-r="${i}">查看错题（${w}）</button>`}
     </div>`}).join('')}
@@ -258,7 +277,7 @@ function quiz(){
   const last = c.i===c.ids.length-1;
   return `
   <div class="head">
-    <div class="headrow"><span>${c.kind==='wrong'?'错题专练':'第 '+(S.rounds.length+1)+' 轮'} · 已答 <b>${answered}</b>/${c.ids.length}</span><button class="link" id="quit" style="min-height:32px;padding:0">返回首页</button></div>
+    <div class="headrow"><span>${c.kind==='fav'?'巩固练习':c.kind==='wrong'?'错题专练':'第 '+(S.rounds.length+1)+' 轮'} · 已答 <b>${answered}</b>/${c.ids.length}</span><button class="link" id="quit" style="min-height:32px;padding:0">返回首页</button></div>
     <div class="bar"><i style="width:${answered/c.ids.length*100}%"></i></div>
   </div>
   <div class="panel" style="margin-top:8px">
@@ -266,6 +285,7 @@ function quiz(){
     <div class="headrow"><span>第 <b>${c.i+1}</b> 题</span></div>
     <p class="qtext">${esc(q.q)}</p>
     <div class="opts">${opts}</div>
+    <div class="fav-row"><button class="fav-b${S.fav.includes(c.ids[c.i])?' on':''}" id="fav">${S.fav.includes(c.ids[c.i])?'★ 已加入巩固题库':'☆ 加入巩固题库'}</button></div>
     ${reveal ? (a===q.a ? `<p class="feedback ok">回答正确</p>` : `<p class="feedback no">回答错误，正确答案：${L(q.a)}</p>`) : ''}
   </div>
   ${confirmSubmit===true ? `<div class="panel confirm stack" style="margin-top:12px">
@@ -328,7 +348,7 @@ function study(){
   </div>
   <div class="stack" id="study-list" style="margin-top:8px">${studyList()}</div>`;
 }
-function render(){ app.innerHTML = view==='quiz'?quiz():view==='result'?result():view==='round'?roundView():view==='study'?study():home(); }
+function render(){ app.innerHTML = view==='fav'?favView():view==='quiz'?quiz():view==='result'?result():view==='round'?roundView():view==='study'?study():home(); }
 app.addEventListener('input', e=>{ if(e.target.id==='study-q'){ studyQ=e.target.value; document.getElementById('study-list').innerHTML=studyList(); } });
 function setMode(m){ mode=m; instant=m!=='exam'; try{ localStorage.setItem(KEY+'-mode', m) }catch(e){}; render(); }
 
@@ -340,10 +360,14 @@ app.addEventListener('click', e=>{
     if(!instant && c.i<c.ids.length-1) setTimeout(()=>{ c.i++; save(); render(); scrollTo(0,0) }, 220);
     return; }
   if(b.dataset.r!==undefined){ roundIdx=+b.dataset.r; reviewAll=false; view='round'; render(); scrollTo(0,0); return; }
+  if(b.dataset.unfav!==undefined){ S.fav=S.fav.filter(x=>x!==+b.dataset.unfav); save(); render(); return; }
   if(b.dataset.j!==undefined){ c.i=+b.dataset.j; showGrid=false; save(); render(); scrollTo(0,0); return; }
   switch(b.id){
     case 'go': start('all'); break;
     case 'gow': start('wrong'); break;
+    case 'favs': view='fav'; render(); scrollTo(0,0); break;
+    case 'gofav': start('fav'); break;
+    case 'fav': { const id=c.ids[c.i]; S.fav = S.fav.includes(id) ? S.fav.filter(x=>x!==id) : S.fav.concat(id); save(); render(); break; }
     case 'm-inst': setMode('inst'); break;
     case 'm-study': setMode('study'); break;
     case 'study': view='study'; render(); scrollTo(0,0); break;
@@ -363,7 +387,7 @@ app.addEventListener('click', e=>{
     case 'rv-a': reviewAll=true; render(); break;
     case 'rs': confirmSubmit='reset'; render(); break;
     case 'rs-no': confirmSubmit=false; render(); break;
-    case 'rs-yes': S={seen:{},wrong:{},rounds:[],cur:null}; save(); confirmSubmit=false; render(); break;
+    case 'rs-yes': S={seen:{},wrong:{},rounds:[],cur:null,fav:S.fav||[]}; save(); confirmSubmit=false; render(); break;
   }
 });
 app.addEventListener('click', e=>{ if(e.target.id==='sheet'){ showGrid=false; render(); } });
@@ -396,7 +420,7 @@ render();
 })();
 // auto-update: reload when a newer version is published (GitHub Pages caches pages ~10 min)
 (function(){
-  const VERSION='20261016080210';
+  const VERSION='20261016082038';
   fetch(location.pathname+'?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>{
     const m=t.match(/const VERSION='(\d+)'/);
     if(m && m[1]>VERSION) location.replace(location.pathname+'?v='+m[1]);
