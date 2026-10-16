@@ -86,6 +86,15 @@ button:disabled{opacity:.45;cursor:default}
 .sheet{position:fixed;inset:0;z-index:10;background:rgba(10,14,25,.45);display:flex;align-items:flex-end}
 .sheet .box{background:var(--bg);width:100%;max-height:75%;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .sheet .box>div{max-width:640px;margin:0 auto}
+/* round history rows */
+.rec{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px;border-top:1px solid var(--line)}
+.rec:first-of-type{border-top:0}
+.rec-l{display:flex;flex-direction:column;gap:2px;min-width:0}
+.rec-t{font-size:13px;color:var(--muted)}
+.rec-s{font-size:14px;color:var(--muted)}
+.rec-s b{font-family:var(--num);font-size:22px;color:var(--accent);font-variant-numeric:tabular-nums}
+.rec-s small{font-size:13px}
+.rec-b{flex:none;min-height:40px;padding:8px 12px;font-size:14px;color:var(--bad);border-color:var(--bad)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -129,14 +138,38 @@ function submit(){
     else S.wrong[q]=2; // must answer right twice in later rounds to leave the wrong-book
   });
   c.done=true; c.right=right;
-  S.rounds.push({t:Date.now(), n:c.ids.length, right, kind:c.kind}); if(S.rounds.length>50) S.rounds.shift();
+  S.rounds.push({t:Date.now(), n:c.ids.length, right, kind:c.kind, ids:c.ids.slice(), ans:c.ans.slice()}); if(S.rounds.length>50) S.rounds.shift();
   save(); view='result'; reviewAll=false; render(); scrollTo(0,0);
+}
+function fmtT(t){ return new Date(t).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) }
+let roundIdx=null;
+function reviewList(ids, ans){
+  const list = ids.map((id,k)=>({k,q:BANK[id],a:ans[k]})).filter(x=> reviewAll || x.a!==x.q.a);
+  return list.length ? list.map(x=>`<div class="wq">
+      <span class="qn">第 ${x.k+1} 题</span>
+      <span class="qq">${esc(x.q.q)}</span>
+      ${x.a!==x.q.a ? `<div class="ans y"><span class="lbl">你的答案</span><span>${x.a===null?'未作答':L(x.a)+'. '+esc(x.q.o[x.a])}</span></div>`:''}
+      <div class="ans c"><span class="lbl">正确答案</span><span>${L(x.q.a)}. ${esc(x.q.o[x.q.a])}</span></div>
+    </div>`).join('') : '<p class="sub">这一轮全部答对。</p>';
+}
+function roundView(){
+  const r=S.rounds[roundIdx]; if(!r||!r.ids){ view='home'; return home(); }
+  return `<div class="headrow" style="margin-top:8px"><span>${fmtT(r.t)} · ${r.kind==='wrong'?'错题专练':'模拟考试'}</span><button class="link" id="back-home" style="min-height:32px;padding:0">返回首页</button></div>
+  <div class="panel stack" style="margin-top:8px">
+    <div class="score">${r.right*2}<small> 分 / ${r.n*2}</small></div>
+    <div class="headrow"><span>答对 <b>${r.right}</b> / ${r.n} 题 · 每题 2 分</span><span>错 <b style="color:var(--bad)">${r.n-r.right}</b> 题</span></div>
+  </div>
+  <div class="panel stack" style="margin-top:16px">
+    <div class="headrow"><h2 style="margin:0">${reviewAll?'本轮全部题目':'本轮错题'}</h2>
+      <div class="seg"><button id="rv-w" aria-pressed="${!reviewAll}">只看错题</button><button id="rv-a" aria-pressed="${reviewAll}">全部</button></div></div>
+    ${reviewList(r.ids, r.ans)}
+  </div>`;
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) }
 
 function home(){
   const seenN = Object.keys(S.seen).length, wrongN = Object.keys(S.wrong).length;
-  const last = S.rounds.slice(-5).reverse();
+  const last = S.rounds.map((r,i)=>({r,i})).slice(-10).reverse();
   return `
   <h1>企业文化模拟考试</h1>
   <p class="sub">题库共 ${BANK.length} 道单选题 · 每次 ${N} 题 · 答题过程中不显示对错，交卷后打分并列出错题</p>
@@ -154,7 +187,11 @@ function home(){
     <button class="ghost" id="gow" ${wrongN?'':'disabled'}>错题专练（${Math.min(wrongN,N)} 题）</button>
   </div>
   ${last.length ? `<div class="panel stack" style="margin-top:16px"><h2>最近成绩</h2>
-    ${last.map(r=>`<div class="headrow"><span>${new Date(r.t).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} · ${r.kind==='wrong'?'错题专练':'模拟考试'}</span><b>${r.right}/${r.n}</b></div>`).join('')}
+    ${last.map(({r,i})=>{ const w=r.ids?r.n-r.right:null; return `<div class="rec">
+      <div class="rec-l"><span class="rec-t">${fmtT(r.t)} · ${r.kind==='wrong'?'错题专练':'模拟考试'}</span>
+        <span class="rec-s"><b>${r.right*2}</b> 分<small> / ${r.n*2}</small> · 答对 ${r.right}/${r.n}</span></div>
+      ${w===null ? `<span class="hint">旧记录无错题明细</span>` : w===0 ? `<span class="hint" style="color:var(--ok)">全部答对</span>` : `<button class="ghost rec-b" data-r="${i}">查看错题（${w}）</button>`}
+    </div>`}).join('')}
   </div>` : ''}
   <div style="margin-top:16px;text-align:center">
     ${confirmSubmit==='reset' ? `<div class="panel confirm stack"><span>清空所有做题记录、错题本和成绩？</span><div class="row"><button class="ghost" id="rs-no">保留记录</button><button class="primary" id="rs-yes" style="background:var(--bad)">清空记录</button></div></div>`
@@ -228,7 +265,7 @@ function result(){
 }
 
 const app=document.getElementById('app');
-function render(){ app.innerHTML = view==='quiz'?quiz():view==='result'?result():home(); }
+function render(){ app.innerHTML = view==='quiz'?quiz():view==='result'?result():view==='round'?roundView():home(); }
 function setMode(v){ instant=v; try{ localStorage.setItem(KEY+'-mode', v?'inst':'exam') }catch(e){}; render(); }
 
 app.addEventListener('click', e=>{
@@ -238,6 +275,7 @@ app.addEventListener('click', e=>{
     render();
     if(!instant && c.i<c.ids.length-1) setTimeout(()=>{ c.i++; save(); render(); scrollTo(0,0) }, 220);
     return; }
+  if(b.dataset.r!==undefined){ roundIdx=+b.dataset.r; reviewAll=false; view='round'; render(); scrollTo(0,0); return; }
   if(b.dataset.j!==undefined){ c.i=+b.dataset.j; showGrid=false; save(); render(); scrollTo(0,0); return; }
   switch(b.id){
     case 'go': start('all'); break;
@@ -252,6 +290,7 @@ app.addEventListener('click', e=>{
     case 'sb-no': confirmSubmit=false; render(); break;
     case 'sb-yes': confirmSubmit=false; submit(); break;
     case 'quit': view='home'; render(); break; // round kept; resumes from home via 继续
+    case 'back-home': view='home'; render(); scrollTo(0,0); break;
     case 'home': S.cur=null; save(); view='home'; render(); scrollTo(0,0); break;
     case 'resume': view='quiz'; render(); break;
     case 'rv-w': reviewAll=false; render(); break;
@@ -274,7 +313,7 @@ home = function(){
 render();
 // auto-update: reload when a newer version is published (GitHub Pages caches pages ~10 min)
 (function(){
-  const VERSION='20261015171121';
+  const VERSION='20261016080210';
   fetch(location.pathname+'?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>{
     const m=t.match(/const VERSION='(\d+)'/);
     if(m && m[1]>VERSION) location.replace(location.pathname+'?v='+m[1]);
